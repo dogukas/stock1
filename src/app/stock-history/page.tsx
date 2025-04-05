@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Search, Save, Filter, CheckSquare, Square, MessageSquarePlus } from "lucide-react"
+import { Filter, CheckSquare, Square, MessageSquarePlus } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -37,6 +37,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+interface StockItem {
+  [key: string]: string | number  // Index signature for dynamic access
+  Marka: string
+  "Ürün Grubu": string
+  "Ürün Kodu": string
+  "Renk Kodu": string
+  Beden: string
+  Envanter: number
+}
+
 interface DisplayStatus {
   isDisplayed: boolean
   lastChecked: string
@@ -47,7 +57,7 @@ type StockDisplayStatus = Record<string, DisplayStatus>
 
 // localStorage yardımcı fonksiyonları
 const storage = {
-  save: (key: string, value: any) => {
+  save: (key: string, value: unknown) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(key, JSON.stringify(value))
     }

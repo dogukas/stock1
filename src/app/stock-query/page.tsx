@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover"
 
 interface StockItem {
+  [key: string]: string | number  // Index signature for dynamic access
   Marka: string
   "Ürün Grubu": string
   "Ürün Kodu": string
@@ -52,6 +53,11 @@ export default function StockQueryPage() {
   const [filterColumn, setFilterColumn] = useState<keyof StockItem>("Marka")
   const [sortConfig, setSortConfig] = useState<SortConfig>({ column: null, direction: 'asc' })
   const [activeFilters, setActiveFilters] = useState<Filter[]>([])
+
+  const columns = useMemo(() => {
+    if (stockData.length === 0) return []
+    return Object.keys(stockData[0]) as (keyof StockItem)[]
+  }, [stockData])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -104,7 +110,7 @@ export default function StockQueryPage() {
     }
 
     // Apply sorting
-    if (sortConfig.column) {
+    if (sortConfig?.column) {
       result.sort((a, b) => {
         const aValue = String(a[sortConfig.column!]).toLowerCase()
         const bValue = String(b[sortConfig.column!]).toLowerCase()
@@ -119,8 +125,6 @@ export default function StockQueryPage() {
 
     return result
   }, [stockData, activeFilters, searchTerm, filterColumn, sortConfig])
-
-  const columns: (keyof StockItem)[] = ["Marka", "Ürün Grubu", "Ürün Kodu", "Renk Kodu", "Beden", "Envanter"]
 
   const uniqueValues = useMemo(() => {
     const values: Partial<Record<keyof StockItem, Set<string>>> = {}
@@ -242,12 +246,12 @@ export default function StockQueryPage() {
                 <TableHead 
                   key={column}
                   className="cursor-pointer"
-                  onClick={() => handleSort(column)}
+                  onClick={() => handleSort(column as keyof StockItem)}
                 >
                   <div className="flex items-center gap-2">
                     {column}
                     <ArrowUpDown className="h-4 w-4" />
-                    {sortConfig.column === column && (
+                    {sortConfig?.column === column && (
                       <span className="text-xs">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
                       </span>
