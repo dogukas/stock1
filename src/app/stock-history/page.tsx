@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useStockStore } from "@/store/useStockStore"
 import {
   Table,
@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Filter, CheckSquare, Square, MessageSquarePlus } from "lucide-react"
+import { Filter, CheckSquare, Square, MessageSquarePlus, Search } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -42,6 +42,7 @@ interface StockItem {
   Marka: string
   "Ürün Grubu": string
   "Ürün Kodu": string
+  "Barkod": string
   "Renk Kodu": string
   Beden: string
   Envanter: number
@@ -81,6 +82,9 @@ export default function StockHistoryPage() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [bulkNote, setBulkNote] = useState("")
   const [isAllSelected, setIsAllSelected] = useState(false)
+  const [barcodeInput, setBarcodeInput] = useState("")
+  const barcodeInputRef = useRef<HTMLInputElement>(null)
+  const [lastScannedProduct, setLastScannedProduct] = useState<string | null>(null)
 
   // localStorage'dan verileri yükle
   useEffect(() => {
@@ -90,7 +94,22 @@ export default function StockHistoryPage() {
     }
   }, [])
 
-  const columns: (keyof StockItem)[] = ["Marka", "Ürün Grubu", "Ürün Kodu", "Renk Kodu", "Beden", "Envanter"]
+  // Barkod input'una otomatik odaklanma
+  useEffect(() => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus()
+    }
+  }, [])
+
+  const columns: (keyof StockItem)[] = [
+    "Marka", 
+    "Ürün Grubu", 
+    "Ürün Kodu", 
+    "Barkod",
+    "Renk Kodu", 
+    "Beden", 
+    "Envanter"
+  ]
 
   const handleCheckboxChange = (productKey: string, checked: boolean) => {
     const newStatus = {
@@ -212,6 +231,49 @@ export default function StockHistoryPage() {
     setDisplayStatus(newStatus)
     storage.save('stockDisplayStatus', newStatus)
     setBulkNote("")
+  }
+
+  // Barkod input değişikliğini izle
+  const handleBarcodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setBarcodeInput(value)
+
+    // Barkod değeri değiştiğinde hemen işlemi yap
+    const foundProduct = stockData.find(item => 
+      item["Barkod"]?.toString() === value ||
+      item["Ürün Kodu"]?.toString() === value
+    )
+
+    if (foundProduct) {
+      const productKey = getProductKey(foundProduct)
+      
+      // Ürünün durumunu güncelle
+      const newStatus = {
+        isDisplayed: true,
+        lastChecked: new Date().toISOString(),
+        notes: displayStatus[productKey]?.notes || ""
+      }
+      
+      setDisplayStatus(prev => ({
+        ...prev,
+        [productKey]: newStatus
+      }))
+
+      storage.save('stockDisplayStatus', {
+        ...displayStatus,
+        [productKey]: newStatus
+      })
+
+      setLastScannedProduct(foundProduct["Barkod"]?.toString() || foundProduct["Ürün Kodu"]?.toString())
+      
+      // Input'u temizle
+      setBarcodeInput("")
+      
+      // 2 saniye sonra son okutulan ürün bilgisini temizle
+      setTimeout(() => {
+        setLastScannedProduct(null)
+      }, 2000)
+    }
   }
 
   return (
@@ -367,6 +429,32 @@ export default function StockHistoryPage() {
             <SelectItem value="not-displayed">Sergilenmeyenler</SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Barkod okutma alanı */}
+        <div className="w-full max-w-md">
+          <div className="mb-2">
+            <h2 className="text-sm font-semibold text-gray-700">List Barkod</h2>
+            <p className="text-xs text-muted-foreground">Ürün barkodunu okutun veya girin</p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              <Input
+                ref={barcodeInputRef}
+                type="text"
+                value={barcodeInput}
+                onChange={handleBarcodeInputChange}
+                placeholder="Barkod okutun..."
+                className="w-full"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          {lastScannedProduct && (
+            <div className="mt-2 text-sm text-green-600 animate-fade-out">
+              ✓ {lastScannedProduct} barkodlu ürün işaretlendi
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="border rounded-lg">

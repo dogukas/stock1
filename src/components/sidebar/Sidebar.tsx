@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, Menu, Settings, Search, History, ChevronLeft, ChevronRight } from "lucide-react"
+import { Home, Menu, Shield, Search, History, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -72,7 +72,7 @@ function SidebarContent({ isCollapsed }: SidebarContentProps) {
     { title: "Ana Sayfa", href: "/", icon: Home },
     { title: "Stok Sorgula", href: "/stock-query", icon: Search },
     { title: "Stock Checklist List", href: "/stock-history", icon: History },
-    { title: "Ayarlar", href: "/settings", icon: Settings },
+    { title: "Admin", href: "/admin", icon: Shield },
   ]
 
   return (

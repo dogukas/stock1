@@ -26,15 +26,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { supabase } from '@/lib/supabase'
 
 interface StockItem {
   [key: string]: string | number  // Index signature for dynamic access
-  Marka: string
-  "Ürün Grubu": string
   "Ürün Kodu": string
-  "Renk Kodu": string
+  "Ürün Grubu": string
+  Marka: string
   Beden: string
   Envanter: number
+  Barkod: string
 }
 
 type SortConfig = {
@@ -53,25 +54,67 @@ export default function StockQueryPage() {
   const [filterColumn, setFilterColumn] = useState<keyof StockItem>("Marka")
   const [sortConfig, setSortConfig] = useState<SortConfig>({ column: null, direction: 'asc' })
   const [activeFilters, setActiveFilters] = useState<Filter[]>([])
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   const columns = useMemo(() => {
     if (stockData.length === 0) return []
     return Object.keys(stockData[0]) as (keyof StockItem)[]
   }, [stockData])
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setLoading(true)
+      setMessage('')
+      
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      // Excel dosyasını oku
       const reader = new FileReader()
-      reader.onload = (e) => {
-        const data = e.target?.result
-        const workbook = XLSX.read(data, { type: "binary" })
-        const sheetName = workbook.SheetNames[0]
-        const worksheet = workbook.Sheets[sheetName]
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as StockItem[]
-        setStockData(jsonData)
+      reader.onload = async (e) => {
+        try {
+          const data = e.target?.result
+          const workbook = XLSX.read(data, { type: 'binary' })
+          const sheetName = workbook.SheetNames[0]
+          const sheet = workbook.Sheets[sheetName]
+          const rawData = XLSX.utils.sheet_to_json(sheet)
+
+          // Veriyi doğru formata dönüştür
+          const formattedData = rawData.map(item => ({
+            "Ürün Kodu": String(item["Ürün Kodu"] || ""),
+            "Ürün Grubu": String(item["Ürün Grubu"] || ""),
+            "Marka": String(item["Marka"] || ""),
+            "Beden": String(item["Beden"] || ""),
+            "Envanter": Number(item["Envanter"]) || 0,
+            "Barkod": String(item["Barkod"] || "")
+          }))
+
+          // Supabase'e kaydet
+          const { error } = await supabase
+            .from('excel_data')
+            .insert(formattedData)
+
+          if (error) {
+            console.error('Supabase kayıt hatası:', error)
+            throw new Error(error.message)
+          }
+          
+          // Store'u güncelle
+          setStockData(formattedData)
+          setMessage('Excel verisi başarıyla yüklendi!')
+        } catch (error) {
+          console.error('Veri yükleme hatası:', error)
+          setMessage(error instanceof Error ? error.message : 'Veri yüklenirken bir hata oluştu.')
+        }
       }
+
       reader.readAsBinaryString(file)
+    } catch (error) {
+      console.error('Dosya okuma hatası:', error)
+      setMessage('Dosya okunurken bir hata oluştu.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -148,11 +191,18 @@ export default function StockQueryPage() {
                 className="hidden"
                 accept=".xlsx, .xls"
                 onChange={handleFileUpload}
+                disabled={loading}
               />
             </label>
           </Button>
         </div>
       </div>
+
+      {message && (
+        <p className={`text-sm ${message.includes('hata') ? 'text-red-500' : 'text-green-500'}`}>
+          {message}
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-4">
         <div className="flex gap-2 items-center">
