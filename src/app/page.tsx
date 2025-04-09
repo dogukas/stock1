@@ -76,25 +76,6 @@ export default function Home() {
       .slice(0, 8) // İlk 8 ürün grubu
   }, [stockData])
 
-  // Renk kodu bazlı stok dağılımı
-  const colorDistribution = useMemo(() => {
-    if (!stockData?.length) return []
-    
-    const distribution = stockData.reduce((acc: { [key: string]: number }, item) => {
-      const color = item["Renk Kodu"] || "Belirtilmemiş"
-      acc[color] = (acc[color] || 0) + Number(item.Envanter)
-      return acc
-    }, {})
-
-    return Object.entries(distribution)
-      .map(([name, value]) => ({
-        name,
-        value
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10) // İlk 10 renk
-  }, [stockData])
-
   // Stok durumu analizi
   const stockAnalysis = useMemo(() => {
     if (!stockData?.length) return {
@@ -261,24 +242,25 @@ export default function Home() {
       </div>
 
       {/* Grafikler */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Marka Dağılımı */}
-        <Card className="col-span-1">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Marka Dağılımı</CardTitle>
-            <CardDescription>En çok stoğu olan markalar</CardDescription>
+            <CardTitle>En Çok Stoktaki Markalar</CardTitle>
+            <CardDescription>İlk 5 marka</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={brandDistribution}
-                  dataKey="value"
-                  nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
-                  label
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
                 >
                   {brandDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -292,46 +274,23 @@ export default function Home() {
         </Card>
 
         {/* Ürün Grubu Dağılımı */}
-        <Card className="col-span-1">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Ürün Grubu Dağılımı</CardTitle>
-            <CardDescription>Kategorilere göre stok dağılımı</CardDescription>
+            <CardTitle>Ürün Grubu Dağılımı</CardTitle>
+            <CardDescription>En çok stoktaki gruplar</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={productGroupDistribution}>
+              <BarChart
+                data={productGroupDistribution}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                <YAxis />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={80} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
-                  {productGroupDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Renk Kodu Dağılımı */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">Renk Dağılımı</CardTitle>
-            <CardDescription>Renklere göre stok dağılımı</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={colorDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
-                  {colorDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
+                <Bar dataKey="value" fill="#8884d8" name="Stok Miktarı" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

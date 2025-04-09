@@ -106,7 +106,7 @@ export default function StockHistoryPage() {
     "Ürün Grubu", 
     "Ürün Kodu", 
     "Barkod",
-    "Renk Kodu", 
+    "Renk Kodu",
     "Beden", 
     "Envanter"
   ]

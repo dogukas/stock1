@@ -36,6 +36,7 @@ interface StockItem {
   Beden: string
   Envanter: number
   Barkod: string
+  Renk_Kodu: string
 }
 
 type SortConfig = {
@@ -59,7 +60,7 @@ export default function StockQueryPage() {
 
   const columns = useMemo(() => {
     if (stockData.length === 0) return []
-    return Object.keys(stockData[0]) as (keyof StockItem)[]
+    return ["Ürün Kodu", "Ürün Grubu", "Marka", "Beden", "Envanter", "Barkod", "Renk_Kodu"] as (keyof StockItem)[]
   }, [stockData])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +88,8 @@ export default function StockQueryPage() {
             "Marka": String(item["Marka"] || ""),
             "Beden": String(item["Beden"] || ""),
             "Envanter": Number(item["Envanter"]) || 0,
-            "Barkod": String(item["Barkod"] || "")
+            "Barkod": String(item["Barkod"] || ""),
+            "Renk_Kodu": String(item["Renk_Kodu"] || "")
           }))
 
           // Supabase'e kaydet
