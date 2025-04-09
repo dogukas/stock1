@@ -81,6 +81,7 @@ export default function Home() {
       totalStock: 0,
       uniqueProducts: 0,
       lowStock: 0,
+      highStock: 0,
       outOfStock: 0,
       totalValue: 0
     }
@@ -90,14 +91,16 @@ export default function Home() {
       return {
         totalStock: acc.totalStock + stock,
         uniqueProducts: acc.uniqueProducts + 1,
-        lowStock: acc.lowStock + (stock <= 5 ? 1 : 0),
+        lowStock: acc.lowStock + (stock < 2 ? 1 : 0), // 2'den az olan stoklar
+        highStock: acc.highStock + (stock > 5 ? 1 : 0), // 5'ten fazla olan stoklar
         outOfStock: acc.outOfStock + (stock === 0 ? 1 : 0),
-        totalValue: acc.totalValue + (stock * 100) // Ortalama ürün değeri 100 TL
+        totalValue: acc.totalValue + (stock * 100)
       }
     }, {
       totalStock: 0,
       uniqueProducts: 0,
       lowStock: 0,
+      highStock: 0,
       outOfStock: 0,
       totalValue: 0
     })
@@ -145,67 +148,73 @@ export default function Home() {
       </div>
 
       {/* Özet Kartları */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Toplam Stok</CardTitle>
+            <CardDescription className="text-xs">Tüm ürünlerin toplamı</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stockAnalysis.totalStock.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stockAnalysis.uniqueProducts} farklı ürün
-            </p>
+            <div className="text-2xl font-bold">{stockAnalysis.totalStock}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-amber-50 dark:bg-amber-900/20">
+        <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <CardTitle className="text-sm font-medium">Düşük Stok</CardTitle>
-            </div>
+            <CardTitle className="text-sm font-medium">Benzersiz Ürün</CardTitle>
+            <CardDescription className="text-xs">Farklı ürün sayısı</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {stockAnalysis.lowStock}
-            </div>
-            <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
-              5 veya daha az stok
-            </p>
+            <div className="text-2xl font-bold">{stockAnalysis.uniqueProducts}</div>
           </CardContent>
         </Card>
 
-        <Card className="bg-red-50 dark:bg-red-900/20">
+        <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <CardTitle className="text-sm font-medium">Stok Yok</CardTitle>
-            </div>
+            <CardTitle className="text-sm font-medium text-amber-600">Düşük Stok</CardTitle>
+            <CardDescription className="text-xs">2'den az stoklu ürünler</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {stockAnalysis.outOfStock}
-            </div>
-            <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-1">
-              Tükenen ürünler
+            <div className="text-2xl font-bold text-amber-600">{stockAnalysis.lowStock}</div>
+            <p className="text-xs text-muted-foreground">
+              Toplam ürünlerin {((stockAnalysis.lowStock / stockAnalysis.uniqueProducts) * 100).toFixed(1)}%'i
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Package className="h-4 w-4 text-blue-500" />
-              <CardTitle className="text-sm font-medium">Toplam Değer</CardTitle>
-            </div>
+            <CardTitle className="text-sm font-medium text-green-600">Yüksek Stok</CardTitle>
+            <CardDescription className="text-xs">5'ten fazla stoklu ürünler</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ₺{stockAnalysis.totalValue.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Tahmini stok değeri
+            <div className="text-2xl font-bold text-green-600">{stockAnalysis.highStock}</div>
+            <p className="text-xs text-muted-foreground">
+              Toplam ürünlerin {((stockAnalysis.highStock / stockAnalysis.uniqueProducts) * 100).toFixed(1)}%'i
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-600">Stok Yok</CardTitle>
+            <CardDescription className="text-xs">Tükenmiş ürünler</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stockAnalysis.outOfStock}</div>
+            <p className="text-xs text-muted-foreground">
+              Toplam ürünlerin {((stockAnalysis.outOfStock / stockAnalysis.uniqueProducts) * 100).toFixed(1)}%'i
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Toplam Değer</CardTitle>
+            <CardDescription className="text-xs">Tahmini stok değeri</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₺{stockAnalysis.totalValue.toLocaleString()}</div>
           </CardContent>
         </Card>
       </div>
