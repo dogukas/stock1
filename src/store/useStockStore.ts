@@ -9,7 +9,7 @@ interface StockItem {
   Beden: string
   Envanter: number
   Barkod: string
-  [key: string]: any
+  [key: string]: string | number
 }
 
 interface StockStore {
@@ -51,11 +51,11 @@ export const useStockStore = create<StockStore>()(
         try {
           set({ loading: true, error: null })
           
-          let { data, error, count } = await supabase
+          const { data, error, count } = await supabase
             .from('excel_data')
             .select('*', { count: 'exact' })
             .order('id', { ascending: true })
-            .limit(100000) // Çok yüksek bir limit belirle
+            .limit(100000)
 
           if (error) {
             throw new Error(error.message)
@@ -65,9 +65,8 @@ export const useStockStore = create<StockStore>()(
             throw new Error('Veri bulunamadı')
           }
 
-          console.log('Toplam kayıt sayısı:', count) // Toplam kayıt sayısını logla
+          console.log('Toplam kayıt sayısı:', count)
 
-          // Veriyi StockItem formatına dönüştür
           const formattedData = data.map(item => ({
             "Ürün Kodu": String(item["Ürün Kodu"] || ""),
             "Ürün Grubu": String(item["Ürün Grubu"] || ""),

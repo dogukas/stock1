@@ -40,8 +40,9 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true)
 
   useEffect(() => {
+    // Sayfa yüklendiğinde verileri çek
     fetchStockData()
-  }, [fetchStockData])
+  }, []) // fetchStockData'yı dependency array'den çıkar
 
   // Marka bazlı stok dağılımı
   const brandDistribution = useMemo(() => {
