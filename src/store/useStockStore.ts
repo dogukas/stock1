@@ -54,20 +54,40 @@ export const useStockStore = create<StockStore>()(
         try {
           set({ loading: true, error: null })
           
-          const { data, error } = await supabase
-            .from('excel_data')
-            .select('*')
-            .order('id', { ascending: true })
-
-          if (error) {
-            throw new Error(error.message)
-          }
+          let allData: any[] = []
+          let page = 0
+          const pageSize = 1000
           
-          if (!data) {
+          while (true) {
+            const { data, error, count } = await supabase
+              .from('excel_data')
+              .select('*', { count: 'exact' })
+              .order('id', { ascending: true })
+              .range(page * pageSize, (page + 1) * pageSize - 1)
+
+            if (error) {
+              throw new Error(error.message)
+            }
+            
+            if (!data || data.length === 0) {
+              break
+            }
+
+            allData = [...allData, ...data]
+            
+            // Eğer bu sayfa tam dolmadıysa, başka sayfa yoktur
+            if (data.length < pageSize) {
+              break
+            }
+            
+            page++
+          }
+
+          if (allData.length === 0) {
             throw new Error('Veri bulunamadı')
           }
 
-          const formattedData = data.map(item => ({
+          const formattedData = allData.map(item => ({
             "Ürün Kodu": String(item["Ürün Kodu"] || ""),
             "Ürün Grubu": String(item["Ürün Grubu"] || ""),
             Marka: String(item["Marka"] || ""),
@@ -77,6 +97,12 @@ export const useStockStore = create<StockStore>()(
           }))
 
           set({ stockData: formattedData, loading: false })
+          
+          // Local storage'ı güncelle
+          localStorage.setItem('stock-storage', JSON.stringify({
+            state: { stockData: formattedData },
+            version: 3
+          }))
         } catch (error) {
           console.error('Veri çekme hatası:', error)
           set({ error: error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu', loading: false })
@@ -103,7 +129,7 @@ export const useStockStore = create<StockStore>()(
     }),
     {
       name: 'stock-storage',
-      version: 2, // Versiyon numarasını artırarak eski cache'i temizle
+      version: 3, // Versiyon numarasını artırarak eski cache'i temizle
       partialize: (state) => ({ stockData: state.stockData }),
       onRehydrateStorage: () => (state) => {
         // Storage'dan veri yüklendiğinde güncel verileri çek
