@@ -9,6 +9,7 @@ interface StockItem {
   Beden: string
   Envanter: number
   Barkod: string
+  "Renk Kodu": string
   [key: string]: string | number
 }
 
@@ -75,7 +76,6 @@ export const useStockStore = create<StockStore>()(
 
             allData = [...allData, ...data]
             
-            // Eğer bu sayfa tam dolmadıysa, başka sayfa yoktur
             if (data.length < pageSize) {
               break
             }
@@ -84,7 +84,8 @@ export const useStockStore = create<StockStore>()(
           }
 
           if (allData.length === 0) {
-            throw new Error('Veri bulunamadı')
+            set({ stockData: [], loading: false })
+            return
           }
 
           const formattedData = allData.map(item => ({
@@ -93,7 +94,8 @@ export const useStockStore = create<StockStore>()(
             Marka: String(item["Marka"] || ""),
             Beden: String(item["Beden"] || ""),
             Envanter: Number(item["Envanter"]) || 0,
-            Barkod: String(item["Barkod"] || "")
+            Barkod: String(item["Barkod"] || ""),
+            "Renk Kodu": String(item["Renk Kodu"] || "")
           }))
 
           set({ stockData: formattedData, loading: false })
