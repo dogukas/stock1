@@ -36,13 +36,21 @@ import {
 import { ArrowUp, ArrowDown, AlertTriangle, Package } from "lucide-react"
 
 export default function Home() {
-  const { stockData, loading, error, fetchStockData } = useStockStore()
+  const { stockData, loading, error, fetchStockData, subscribeToChanges } = useStockStore()
   const [showWelcome, setShowWelcome] = useState(true)
 
   useEffect(() => {
     // Sayfa yüklendiğinde verileri çek
     fetchStockData()
-  }, []) // fetchStockData'yı dependency array'den çıkar
+
+    // Real-time güncellemeleri dinle
+    const unsubscribe = subscribeToChanges()
+
+    // Cleanup
+    return () => {
+      unsubscribe()
+    }
+  }, []) // fetchStockData ve subscribeToChanges dependency'den çıkarıldı çünkü store'da sabit
 
   // Marka bazlı stok dağılımı
   const brandDistribution = useMemo(() => {
